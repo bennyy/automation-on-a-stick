@@ -38,8 +38,9 @@ class TellstickLib:
                 deviceName = cp.value                   # Copy over the string to "Python-space"
                 self.lib.tdReleaseString(cp)            # Free up that buffer!
 
-                self.devices.append(DeviceInfo(deviceId, 
-                    deviceName.decode("utf-8"), deviceStatus))
+                if not "magnet" in deviceName.decode("utf-8"):
+                    self.devices.append(DeviceInfo(deviceId,
+                        deviceName.decode("utf-8"), deviceStatus))
 
         except OSError:
             print("Error loading Telldus library.")
