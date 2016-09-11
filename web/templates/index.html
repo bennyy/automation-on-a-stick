@@ -14,19 +14,27 @@
 
 <body>
 
-
 <div data-role="page" id="lights">
     <div data-role="header">
-        <h1>Hello, I have {{ noOfDevices }} devices!!</h1>
+        <h1>Tellstick</h1>
     </div>
     <div data-role="content">
-    {% for id, name in devices.items() %}
-        <h3>{{ name }}</h3>
-        <select name="lights" id="{{ id }}" data-role="slider">
-                <option value="0" selected>Off</option>
-                <option value="1">On</option>
-        </select>
-    {% endfor %}
+        <div class="ui-grid-a">
+            {% for device in devices %}
+                <div class="ui-block-{{ loop.cycle('a', 'b') }}">
+                    <h3>{{ device.getName() }}</h3>
+                    <select name="lights" id="{{ device.getId() }}" data-role="slider">
+                    {% if device.isOn() %}
+                            <option value="0">Off</option>
+                            <option value="1" selected>On</option>
+                    {% else %}
+                            <option value="0" selected>Off</option>
+                            <option value="1">On</option>
+                    {% endif %}
+                    </select>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 </body>

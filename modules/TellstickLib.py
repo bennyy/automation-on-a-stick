@@ -1,14 +1,37 @@
 from ctypes import * 
 
+class DeviceInfo:
+    def __init__(self, id, name, deviceStatus):
+        self._id = id
+        self._name = name
+        if deviceStatus == 1: # ON
+            self._isOn = True
+        else:
+            self._isOn = False
+
+        print("ID: {} Name: {} IsOn: {} Status: {}".format(self._id, self._name,  self._isOn, deviceStatus))
+
+    def getId(self):
+        return self._id
+
+    def getName(self):
+        return self._name
+
+    def isOn(self):
+        return self._isOn
+
+    def setDeviceStatus(self, status):
+        self._isOn = status
+
 class TellstickLib:
     def __init__(self):
         try:
-            self.devices = {}
+            self.devices = []
             self.lib = cdll.LoadLibrary('libtelldus-core.so.2')
-
+            self.lib.tdInit()
             for device in range(0, self.getNumberOfDevices()):
                 deviceId = self.lib.tdGetDeviceId(device)
-                self.getDeviceStatus(deviceId)
+                deviceStatus = self.getDeviceStatus(deviceId)
 
                 # Get device name
                 funcGetName = self.lib.tdGetName        # The Telldus-lib function name
@@ -17,20 +40,22 @@ class TellstickLib:
                 deviceName = cp.value                   # Copy over the string to "Python-space"
                 self.lib.tdReleaseString(cp)            # Free up that buffer!
 
-                self.devices[deviceId] = deviceName.decode("utf-8")
-            print(self.devices)
+                self.devices.append(DeviceInfo(deviceId, 
+                    deviceName.decode("utf-8"), deviceStatus))
+
         except OSError:
             print("Error loading Telldus library.")
 
     def turnOn(self, id):
+        [x for x in self.devices if x.getId() == int(id)][0].setDeviceStatus(True)
         self.lib.tdTurnOn(int(id))
 
     def turnOff(self, id):
+        [x for x in self.devices if x.getId() == int(id)][0].setDeviceStatus(False)
         self.lib.tdTurnOff(int(id))
 
     def getDeviceStatus(self, id):
-        pass
-        #print(self.lib.tdLastSentCommand(id))
+        return self.lib.tdLastSentCommand(int(id), 1)
 
     def getNumberOfDevices(self):
         return self.lib.tdGetNumberOfDevices()
