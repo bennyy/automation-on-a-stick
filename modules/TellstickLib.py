@@ -1,34 +1,42 @@
-'''from ctypes import c_int, c_ubyte, c_void_p, c_char_p, POINTER, string_at #imports allowing the use of our library
-from threading import Timer
-import time
-import platform
-import datetime
-from ctypes import cdll, CFUNCTYPE
-lib = cdll.LoadLibrary('libtelldus-core.so.2') #import our library'''
-from ctypes import cdll
+from ctypes import * 
 
 class TellstickLib:
     def __init__(self):
         try:
-            print("Loading lib..")
+            self.devices = {}
             self.lib = cdll.LoadLibrary('libtelldus-core.so.2')
-            print("..done")
+
+            for device in range(0, self.getNumberOfDevices()):
+                deviceId = self.lib.tdGetDeviceId(device)
+                self.getDeviceStatus(deviceId)
+
+                # Get device name
+                funcGetName = self.lib.tdGetName        # The Telldus-lib function name
+                funcGetName.restype = c_void_p          # Return pointer is void*
+                cp = c_char_p(funcGetName(deviceId))    # Cast it to a char*
+                deviceName = cp.value                   # Copy over the string to "Python-space"
+                self.lib.tdReleaseString(cp)            # Free up that buffer!
+
+                self.devices[deviceId] = deviceName.decode("utf-8")
+            print(self.devices)
         except OSError:
             print("Error loading Telldus library.")
 
-        #print(self.lib.tdGetNumberOfDevices())
-        #print(self.lib)
-
     def turnOn(self, id):
-        print("Turn on {}".format(id))
-        #self.lib.tdTurnOn(id)
+        self.lib.tdTurnOn(int(id))
 
     def turnOff(self, id):
-        print("Turn off {}".format(id))
-        #self.lib.tdTurnOff(id)
+        self.lib.tdTurnOff(int(id))
+
+    def getDeviceStatus(self, id):
+        pass
+        #print(self.lib.tdLastSentCommand(id))
 
     def getNumberOfDevices(self):
         return self.lib.tdGetNumberOfDevices()
+
+    def getDevices(self):
+        return self.devices
 
 
 
