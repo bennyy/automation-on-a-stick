@@ -9,8 +9,6 @@ class DeviceInfo:
         else:
             self._isOn = False
 
-        print("ID: {} Name: {} IsOn: {} Status: {}".format(self._id, self._name,  self._isOn, deviceStatus))
-
     def getId(self):
         return self._id
 

@@ -2,22 +2,22 @@ import sys
 sys.path.append("../modules")
 
 from TellstickLib import TellstickLib
-tl = TellstickLib()
+tellstickLib = TellstickLib()
 
 from flask import Flask, render_template, request
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('index.html', noOfDevices=tl.getNumberOfDevices(), 
-        devices=tl.getDevices())
+    return render_template('index.html', noOfDevices=tellstickLib.getNumberOfDevices(), 
+        devices=tellstickLib.getDevices())
 
 @app.route('/lights', methods=['POST']) 
 def lights():
     if request.form['mode'] == "1":
-        tl.turnOn(request.form['light'])
+        tellstickLib.turnOn(request.form['light'])
     else:
-        tl.turnOff(request.form['light'])
+        tellstickLib.turnOff(request.form['light'])
     return (request.form['light'], None)
 
 if __name__ == '__main__':
