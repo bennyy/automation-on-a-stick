@@ -1,6 +1,10 @@
+<!DOCTYPE html> 
+
 <html>
 <head>
 <title>Tellstick</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"> 
+
 <link rel="stylesheet" href='/static/style.css' />
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
 <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
@@ -9,15 +13,21 @@
 </head>
 
 <body>
-<h1>Hello, I have {{ noOfDevices }} devices!!</h1>
 
-{% for id, name in devices.items() %}
-    <h3>{{ name }}</h3>
-    <select name="lights" id="{{ id }}" data-role="slider">
-            <option value="0" selected>Off</option>
-            <option value="1">On</option>
-    </select>
-{% endfor %}
 
+<div data-role="page" id="lights">
+    <div data-role="header">
+        <h1>Hello, I have {{ noOfDevices }} devices!!</h1>
+    </div>
+    <div data-role="content">
+    {% for id, name in devices.items() %}
+        <h3>{{ name }}</h3>
+        <select name="lights" id="{{ id }}" data-role="slider">
+                <option value="0" selected>Off</option>
+                <option value="1">On</option>
+        </select>
+    {% endfor %}
+    </div>
+</div>
 </body>
 </html>
