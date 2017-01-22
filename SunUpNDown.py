@@ -27,6 +27,7 @@ def getSecondsToNextSunrise(ep):
     print("[Sunrise] UTC: {} GMT+2: {}".format(sunrise.datetime(), sunriseLocalTime))
     print("Seconds to sunrise: {}".format(secondsToSunrise))
     print("Time to sunrise (power off): {}".format(datetime.timedelta(seconds=secondsToSunrise)))
+    sys.stdout.flush()
 
     return secondsToSunrise + EXTRA_SECONDS
 
@@ -38,7 +39,8 @@ def getSecondsToNextSunset(ep):
     print("[Sunset]  UTC: {} GMT+2: {}".format(sunset.datetime(), sunsetLocalTime))
     print("Seconds to sunset: {}".format(secondsToSunset))
     print("Time to sunset (power on): {}".format(datetime.timedelta(seconds=secondsToSunset)))
-
+    sys.stdout.flush()
+    
     return secondsToSunset + EXTRA_SECONDS
 
 def main(argv):
