@@ -9,21 +9,15 @@ from modules.TellstickLib import TellstickLib
 tellstickLib = TellstickLib()
 
 def turnOnAllLights():
-    print("Turning on all lights...")
     for device in tellstickLib.getDevices():
-        print("Turn on lamp-id: {}").format(device.getId())
         tellstickLib.turnOn(device.getId())
-    print("...Done.")
-
 
 def turnOffAllLights():
-    print("Turning off all lights...")
     for device in tellstickLib.getDevices():
-        print("Turn off lamp-id: {}").format(device.getId())
         tellstickLib.turnOff(device.getId())
-    print("...Done")
 
 LOCAL_TIME_ZONE = pytz.timezone("Europe/Stockholm")
+EXTRA_SECONDS = 5
 
 def getSecondsToNextSunrise(ep):
     sunrise = ep.next_rising(ephem.Sun())
@@ -34,7 +28,7 @@ def getSecondsToNextSunrise(ep):
     print("Seconds to sunrise: {}".format(secondsToSunrise))
     print("Time to sunrise (power off): {}".format(datetime.timedelta(seconds=secondsToSunrise)))
 
-    return secondsToSunrise
+    return secondsToSunrise + EXTRA_SECONDS
 
 def getSecondsToNextSunset(ep):
     sunset = ep.next_setting(ephem.Sun())
@@ -45,7 +39,7 @@ def getSecondsToNextSunset(ep):
     print("Seconds to sunset: {}".format(secondsToSunset))
     print("Time to sunset (power on): {}".format(datetime.timedelta(seconds=secondsToSunset)))
 
-    return secondsToSunset
+    return secondsToSunset + EXTRA_SECONDS
 
 def main(argv):
     print("Current UTC_TIME: " + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
