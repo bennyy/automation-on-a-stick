@@ -1,4 +1,4 @@
-from ctypes import * 
+from ctypes import *
 
 class DeviceInfo:
     def __init__(self, id, name, deviceStatus):
@@ -58,6 +58,13 @@ class TellstickLib:
 
     def getNumberOfDevices(self):
         return self.lib.tdGetNumberOfDevices()
+
+    def updateDeviceStatus(self):
+        for device in self.getDevices():
+            if self.getDeviceStatus(device.getId()) == 1:
+                device.setDeviceStatus(True)
+            else:
+                device.setDeviceStatus(False)
 
     def getDevices(self):
         return self.devices

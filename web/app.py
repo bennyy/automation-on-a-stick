@@ -9,10 +9,12 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('index.html', noOfDevices=tellstickLib.getNumberOfDevices(), 
+    tellstickLib.updateDeviceStatus()
+    return render_template('index.html',
+        noOfDevices=tellstickLib.getNumberOfDevices(),
         devices=tellstickLib.getDevices())
 
-@app.route('/lights', methods=['POST']) 
+@app.route('/lights', methods=['POST'])
 def lights():
     if request.form['mode'] == "1":
         tellstickLib.turnOn(request.form['light'])
@@ -22,4 +24,3 @@ def lights():
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=14895)
-
