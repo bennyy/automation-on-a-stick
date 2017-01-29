@@ -4,6 +4,7 @@ import ephem
 import pytz, datetime
 import sys
 from threading import Timer
+import time
 
 from modules.TellstickLib import TellstickLib
 tellstickLib = TellstickLib()
@@ -40,7 +41,7 @@ def getSecondsToNextSunset(ep):
     print("Seconds to sunset: {}".format(secondsToSunset))
     print("Time to sunset (power on): {}".format(datetime.timedelta(seconds=secondsToSunset)))
     sys.stdout.flush()
-    
+
     return secondsToSunset + EXTRA_SECONDS
 
 def main(argv):
@@ -62,12 +63,16 @@ def main(argv):
 
     while True:
         if not sunriseTimer.is_alive():
+            ep.date = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
             sunriseTimer = Timer(int(getSecondsToNextSunrise(ep)), turnOffAllLights)
             sunriseTimer.start()
 
         if not sunsetTimer.is_alive():
+            ep.date = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
             sunsetTimer = Timer(int(getSecondsToNextSunset(ep)), turnOnAllLights)
             sunsetTimer.start()
+
+        time.sleep(1)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
