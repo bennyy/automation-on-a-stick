@@ -23,8 +23,9 @@ class DeviceInfo:
 
 class TellstickLib:
     def __init__(self):
+        self.STUBBED_LIB = False
+        self.devices = []
         try:
-            self.devices = []
             self.lib = cdll.LoadLibrary('libtelldus-core.so.2')
             self.lib.tdInit()
             for device in range(0, self.getNumberOfDevices()):
@@ -43,21 +44,41 @@ class TellstickLib:
                         deviceName.decode("utf-8"), deviceStatus))
 
         except OSError:
+            self.STUBBED_LIB = True
+            self.devices.append(DeviceInfo(1, "Room A", 1))
+            self.devices.append(DeviceInfo(2, "Room B", 1))
+            self.devices.append(DeviceInfo(3, "Room C", 0))
+            self.devices.append(DeviceInfo(4, "Room D", 1))
+            self.devices.append(DeviceInfo(5, "Room E", 1))
+            self.devices.append(DeviceInfo(6, "Room F", 0))
+            self.devices.append(DeviceInfo(7, "Room G", 1))
             print("Error loading Telldus library.")
 
     def turnOn(self, id):
         [x for x in self.devices if x.getId() == int(id)][0].setDeviceStatus(True)
-        self.lib.tdTurnOn(int(id))
+        if self.STUBBED_LIB:
+            print("Lamp {} turned ON.".format(id))
+        else:
+            self.lib.tdTurnOn(int(id))
 
     def turnOff(self, id):
         [x for x in self.devices if x.getId() == int(id)][0].setDeviceStatus(False)
-        self.lib.tdTurnOff(int(id))
+        if self.STUBBED_LIB:
+            print("Lamp {} turned OFF.".format(id))
+        else:
+            self.lib.tdTurnOff(int(id))
 
     def getDeviceStatus(self, id):
-        return self.lib.tdLastSentCommand(int(id), 1)
+        if not self.STUBBED_LIB:
+            return self.lib.tdLastSentCommand(int(id), 1)
+        else:
+            return 1
 
     def getNumberOfDevices(self):
-        return self.lib.tdGetNumberOfDevices()
+        if not self.STUBBED_LIB:
+            return self.lib.tdGetNumberOfDevices()
+        else:
+            return len(self.devices)
 
     def updateDeviceStatus(self):
         for device in self.getDevices():
