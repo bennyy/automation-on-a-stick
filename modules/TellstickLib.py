@@ -10,33 +10,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from TellstickModels import DeviceType, Device, Log
 from db import HomeAutoDB
 
-class DeviceInfo:
-    def __init__(self, id, name, deviceStatus):
-        self._id = id
-        self._name = name
-        if deviceStatus == 1: # ON
-            self._isOn = True
-        else:
-            self._isOn = False
-
-    def getId(self):
-        return self._id
-
-    def getName(self):
-        return self._name
-
-    def isOn(self):
-        return self._isOn
-
-    def setDeviceStatus(self, status):
-        self._isOn = status
-
 class TellstickLib:
     def __init__(self):
         self.db = HomeAutoDB()
 
         self.STUBBED_LIB = False
-        self.devices = []
+
         try:
             self.lib = cdll.LoadLibrary('libtelldus-core.so.2')
             self.lib.tdInit()
@@ -50,35 +29,23 @@ class TellstickLib:
                 cp = c_char_p(funcGetName(deviceId))    # Cast it to a char*
                 deviceName = cp.value                   # Copy over the string to "Python-space"
                 self.lib.tdReleaseString(cp)            # Free up that buffer!
-
-                if not "magnet" in deviceName.decode("utf-8"):
-                    self.devices.append(DeviceInfo(deviceId,
-                        deviceName.decode("utf-8"), deviceStatus))
+                
+                self.db.insertDeviceIfNotExist(deviceId,
+                tellstickId=deviceId, name=deviceName, isOn=deviceStatus)
                 
 
         except OSError:
             self.STUBBED_LIB = True
 
-            self.devices.append(DeviceInfo(1, "Room A", 1))
-            self.devices.append(DeviceInfo(2, "Room B", 1))
-            self.devices.append(DeviceInfo(3, "Room C", 0))
-            self.devices.append(DeviceInfo(4, "Room D", 1))
-            self.devices.append(DeviceInfo(5, "Room E", 1))
-            self.devices.append(DeviceInfo(6, "Room F", 0))
-            self.devices.append(DeviceInfo(7, "Room G", 1))
+            for i in range(7):
+                self.db.insertDeviceIfNotExist(i,
+                tellstickId=i, name="Room " + str(i), isOn=i%2)
 
             print("Error loading Telldus library.")
 
-        for device in self.devices:
-            self.db.insertDeviceIfNotExist(device.getId(),
-            tellstickId=device.getId(), 
-            name=device.getName(), 
-            isOn=device.isOn()
-            )
 
     def turnOn(self, id):
         self.db.updateDeviceStatus(id, 1)
-        self.updateDevicesThing()
         self.db.logEvent(id, 1)
 
         if self.STUBBED_LIB:
@@ -88,7 +55,6 @@ class TellstickLib:
 
     def turnOff(self, id):
         self.db.updateDeviceStatus(id, 0)
-        self.updateDevicesThing()
         self.db.logEvent(id, 0)
 
         if self.STUBBED_LIB:
@@ -102,35 +68,23 @@ class TellstickLib:
             lastSentCommand = self.lib.tdLastSentCommand(int(id), 1)
             return lastSentCommand
         else:
-            return 1
+            return self.db.getDBDeviceStatus(id)
 
     def getNumberOfDevices(self):
         if not self.STUBBED_LIB:
             return self.lib.tdGetNumberOfDevices()
         else:
-            return len(self.devices)
+            return len(self.getDevices())
 
     def updateDeviceStatus(self):
         for device in self.getDevices():
-            if self.getDeviceStatus(device.getId()) == 1:
-                self.db.updateDeviceStatus(device.getId(), True)
-                self.updateDevicesThing()
-                device.setDeviceStatus(True)
+            if self.getDeviceStatus(device.tellstickId) == 1:
+                self.db.updateDeviceStatus(device.tellstickId, True)
             else:
-                self.db.updateDeviceStatus(device.getId(), False)
-                self.updateDevicesThing()
-                device.setDeviceStatus(False)
+                self.db.updateDeviceStatus(device.tellstickId, False)
 
     def getDevices(self):
-        return self.devices
-
-    # Todo: Remove internal structure!!
-    def updateDevicesThing(self):
-        allDevices = self.db.getAllDevices()
-        self.devices = []
-        for device in allDevices:
-            self.devices.append(DeviceInfo(device.tellstickId, device.name, device.isOn))
-
+        return self.db.getAllDevices()
 
 '''
 0000a86c T tdAddDevice

@@ -22,9 +22,9 @@
         <div class="ui-grid-a">
             {% for device in devices %}
                 <div class="ui-block-{{ loop.cycle('a', 'b') }}">
-                    <label for="lights">{{ device.getName() }}</label>
-                    <select name="lights" id="{{ device.getId() }}" data-role="slider">
-                    {% if device.isOn() %}
+                    <label for="lights">{{ device.name }}</label>
+                    <select name="lights" id="{{ device.tellstickId }}" data-role="slider">
+                    {% if device.isOn %}
                             <option value="0">Off</option>
                             <option value="1" selected>On</option>
                     {% else %}

@@ -53,9 +53,17 @@ class HomeAutoDB(object):
             self.mSession.commit()
         else:
             print("ERROR: Could not find this device")
-
+    
     def getAllDevices(self):
         return self.mSession.query(Device).all()
 
     def getSession(self):
         return self.mSession
+
+    # Only for mock-up!
+    def getDBDeviceStatus(self, tellstickId):
+        device = self.mSession.query(Device).filter(Device.tellstickId == int(tellstickId)).first()
+        if device:
+            return device.isOn
+        else:
+            print("ERROR: Could not find this device")

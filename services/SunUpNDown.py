@@ -1,21 +1,24 @@
 #!/home/benny/.python_envs/homeauto/bin/python3
 
+import sys
+sys.path.append("../modules")
+
 import ephem
 import pytz, datetime
 import sys
 from threading import Timer
 import time
 
-from modules.TellstickLib import TellstickLib
+from TellstickLib import TellstickLib
 tellstickLib = TellstickLib()
 
 def turnOnAllLights():
     for device in tellstickLib.getDevices():
-        tellstickLib.turnOn(device.getId())
+        tellstickLib.turnOn(device.tellstickId)
 
 def turnOffAllLights():
     for device in tellstickLib.getDevices():
-        tellstickLib.turnOff(device.getId())
+        tellstickLib.turnOff(device.tellstickId)
 
 LOCAL_TIME_ZONE = pytz.timezone("Europe/Stockholm")
 EXTRA_SECONDS = 5
