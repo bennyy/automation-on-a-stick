@@ -1,0 +1,35 @@
+device {
+  id = 10
+  name = "Hallen"
+  controller = 0
+  protocol = "arctech"
+  model = "selflearning-switch:nexa"
+  parameters {
+    house = "133790"
+    unit = "1"
+  }
+}
+
+device {
+  id = 11
+  name = "Vaxtbelysningen"
+  controller = 0
+  protocol = "arctech"
+  model = "selflearning-switch:nexa"
+  parameters {
+    house = "133791"
+    unit = "1"
+  }
+}
+
+device {
+  id = 12
+  name = "Nexa 3"
+  controller = 0
+  protocol = "arctech"
+  model = "selflearning-switch:nexa"
+  parameters {
+    house = "133792"
+    unit = "1"
+  }
+}

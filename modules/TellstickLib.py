@@ -1,4 +1,13 @@
+import sys
+sys.path.append("../models")
+
 from ctypes import *
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+
+from TellstickModels import DeviceType, Device, Log
 
 class DeviceInfo:
     def __init__(self, id, name, deviceStatus):
@@ -22,7 +31,35 @@ class DeviceInfo:
         self._isOn = status
 
 class TellstickLib:
+
+    def insertDeviceIfNotExists(self, session, device):
+        foundDevice = session.query(Device).filter_by(tellstickId=device.getId()).first()
+        if foundDevice:
+            return foundDevice
+        else:
+            devicetype = self.session.query(DeviceType).filter(DeviceType.name == "Lamp").first()
+            d = Device(tellstickId=device.getId(), name=device.getName(), deviceType_id=devicetype.id)
+            session.add(d)
+            return d
+
     def __init__(self):
+        Base = declarative_base()
+
+        self.dbEngine = create_engine('sqlite:///../homeauto.db')
+        # Bind the engine to the metadata of the Base class so that the
+        # declaratives can be accessed through a DBSession instance
+        Base.metadata.bind = self.dbEngine
+
+        DBSession = sessionmaker(bind=self.dbEngine)
+        # A DBSession() instance establishes all conversations with the database
+        # and represents a "staging zone" for all the objects loaded into the
+        # database session object. Any change made against the objects in the
+        # session won't be persisted into the database until you call
+        # session.commit(). If you're not happy about the changes, you can
+        # revert all of them back to the last commit by calling
+        # session.rollback()
+        self.session = DBSession()
+
         self.STUBBED_LIB = False
         self.devices = []
         try:
@@ -45,6 +82,7 @@ class TellstickLib:
 
         except OSError:
             self.STUBBED_LIB = True
+
             self.devices.append(DeviceInfo(1, "Room A", 1))
             self.devices.append(DeviceInfo(2, "Room B", 1))
             self.devices.append(DeviceInfo(3, "Room C", 0))
@@ -52,7 +90,12 @@ class TellstickLib:
             self.devices.append(DeviceInfo(5, "Room E", 1))
             self.devices.append(DeviceInfo(6, "Room F", 0))
             self.devices.append(DeviceInfo(7, "Room G", 1))
+
             print("Error loading Telldus library.")
+
+        for device in self.devices:
+            self.insertDeviceIfNotExists(self.session, device)
+        self.session.commit()
 
     def turnOn(self, id):
         [x for x in self.devices if x.getId() == int(id)][0].setDeviceStatus(True)
@@ -61,12 +104,24 @@ class TellstickLib:
         else:
             self.lib.tdTurnOn(int(id))
 
+        device = self.session.query(Device).filter(Device.tellstickId == int(id)).first()
+        if device:
+            log = Log(device_id=device.id, enabled=1)
+            self.session.add(log)
+            self.session.commit()
+
     def turnOff(self, id):
         [x for x in self.devices if x.getId() == int(id)][0].setDeviceStatus(False)
         if self.STUBBED_LIB:
             print("Lamp {} turned OFF.".format(id))
         else:
             self.lib.tdTurnOff(int(id))
+
+        device = self.session.query(Device).filter(Device.tellstickId == int(id)).first()
+        if device:
+            log = Log(device_id=device.id, enabled=0)
+            self.session.add(log)
+            self.session.commit()
 
     def getDeviceStatus(self, id):
         if not self.STUBBED_LIB:
