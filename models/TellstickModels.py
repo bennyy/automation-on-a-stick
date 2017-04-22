@@ -19,6 +19,7 @@ class Device(Base):
     tellstickId = Column(Integer)
     name = Column(String)
     deviceType_id = Column(Integer, ForeignKey('device_type.id'))
+    isOn = Column(Boolean)
     watt = Column(Integer, default=0)
 
     logs = relationship("Log")

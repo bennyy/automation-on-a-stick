@@ -8,6 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 from TellstickModels import DeviceType, Device, Log
+from db import HomeAutoDB
 
 class DeviceInfo:
     def __init__(self, id, name, deviceStatus):
@@ -31,34 +32,8 @@ class DeviceInfo:
         self._isOn = status
 
 class TellstickLib:
-
-    def insertDeviceIfNotExists(self, session, device):
-        foundDevice = session.query(Device).filter_by(tellstickId=device.getId()).first()
-        if foundDevice:
-            return foundDevice
-        else:
-            devicetype = self.session.query(DeviceType).filter(DeviceType.name == "Lamp").first()
-            d = Device(tellstickId=device.getId(), name=device.getName(), deviceType_id=devicetype.id)
-            session.add(d)
-            return d
-
     def __init__(self):
-        Base = declarative_base()
-
-        self.dbEngine = create_engine('sqlite:///../homeauto.db')
-        # Bind the engine to the metadata of the Base class so that the
-        # declaratives can be accessed through a DBSession instance
-        Base.metadata.bind = self.dbEngine
-
-        DBSession = sessionmaker(bind=self.dbEngine)
-        # A DBSession() instance establishes all conversations with the database
-        # and represents a "staging zone" for all the objects loaded into the
-        # database session object. Any change made against the objects in the
-        # session won't be persisted into the database until you call
-        # session.commit(). If you're not happy about the changes, you can
-        # revert all of them back to the last commit by calling
-        # session.rollback()
-        self.session = DBSession()
+        self.db = HomeAutoDB()
 
         self.STUBBED_LIB = False
         self.devices = []
@@ -79,6 +54,7 @@ class TellstickLib:
                 if not "magnet" in deviceName.decode("utf-8"):
                     self.devices.append(DeviceInfo(deviceId,
                         deviceName.decode("utf-8"), deviceStatus))
+                
 
         except OSError:
             self.STUBBED_LIB = True
@@ -94,38 +70,37 @@ class TellstickLib:
             print("Error loading Telldus library.")
 
         for device in self.devices:
-            self.insertDeviceIfNotExists(self.session, device)
-        self.session.commit()
+            self.db.insertDeviceIfNotExist(device.getId(),
+            tellstickId=device.getId(), 
+            name=device.getName(), 
+            isOn=device.isOn()
+            )
 
     def turnOn(self, id):
-        [x for x in self.devices if x.getId() == int(id)][0].setDeviceStatus(True)
+        self.db.updateDeviceStatus(id, 1)
+        self.updateDevicesThing()
+        self.db.logEvent(id, 1)
+
         if self.STUBBED_LIB:
             print("Lamp {} turned ON.".format(id))
         else:
             self.lib.tdTurnOn(int(id))
 
-        device = self.session.query(Device).filter(Device.tellstickId == int(id)).first()
-        if device:
-            log = Log(device_id=device.id, enabled=1)
-            self.session.add(log)
-            self.session.commit()
-
     def turnOff(self, id):
-        [x for x in self.devices if x.getId() == int(id)][0].setDeviceStatus(False)
+        self.db.updateDeviceStatus(id, 0)
+        self.updateDevicesThing()
+        self.db.logEvent(id, 0)
+
         if self.STUBBED_LIB:
             print("Lamp {} turned OFF.".format(id))
         else:
             self.lib.tdTurnOff(int(id))
 
-        device = self.session.query(Device).filter(Device.tellstickId == int(id)).first()
-        if device:
-            log = Log(device_id=device.id, enabled=0)
-            self.session.add(log)
-            self.session.commit()
-
+        
     def getDeviceStatus(self, id):
         if not self.STUBBED_LIB:
-            return self.lib.tdLastSentCommand(int(id), 1)
+            lastSentCommand = self.lib.tdLastSentCommand(int(id), 1)
+            return lastSentCommand
         else:
             return 1
 
@@ -138,13 +113,23 @@ class TellstickLib:
     def updateDeviceStatus(self):
         for device in self.getDevices():
             if self.getDeviceStatus(device.getId()) == 1:
+                self.db.updateDeviceStatus(device.getId(), True)
+                self.updateDevicesThing()
                 device.setDeviceStatus(True)
             else:
+                self.db.updateDeviceStatus(device.getId(), False)
+                self.updateDevicesThing()
                 device.setDeviceStatus(False)
 
     def getDevices(self):
         return self.devices
 
+    # Todo: Remove internal structure!!
+    def updateDevicesThing(self):
+        allDevices = self.db.getAllDevices()
+        self.devices = []
+        for device in allDevices:
+            self.devices.append(DeviceInfo(device.tellstickId, device.name, device.isOn))
 
 
 '''
